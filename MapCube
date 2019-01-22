@@ -1,0 +1,48 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class MapCube: MonoBehaviour {
+
+    //[HideInInspector]
+    public GameObject TurretGo;//保存当前Cube身上的炮台
+    public GameObject BuildEffect; //建造时的粒子特效
+    public bool IsUpdated = false; //是否升级过
+    public TurretData turretData;
+
+    public void BuildTurret(TurretData turretData)
+    {
+        this.turretData = turretData;
+        
+        if(IsUpdated == false)
+            TurretGo = GameObject.Instantiate(turretData.turretPrefab, this.transform.position + new Vector3(0,0.5f,0), Quaternion.identity);
+        else
+            TurretGo = GameObject.Instantiate(turretData.turretUpgradedPrefab, this.transform.position, Quaternion.identity);
+        GameObject effect = GameObject.Instantiate(BuildEffect, this.transform.position + new Vector3(0,0.5f,0), Quaternion.identity);
+        //延时1.5s销毁特效
+        Destroy(effect,1.5f);
+        //IsUpdated = false;
+    }
+
+
+
+    public void OnMouseOver()
+    {
+        //Debug.Log(this.gameObject.name);
+        //Cube上没有炮塔且没有在UI上
+        if(EventSystem.current.IsPointerOverGameObject() == false && TurretGo == null)
+        {
+            //鼠标移上时方块的颜色变为红色
+            this.gameObject.GetComponent<MeshRenderer>().material.color = Color.red;
+        }
+       
+    }
+    public void OnMouseExit()
+    { 
+        //鼠标移开时方块的颜色变为白色
+        this.gameObject.GetComponent<MeshRenderer>().material.color = Color.white;
+    }
+
+
+}
