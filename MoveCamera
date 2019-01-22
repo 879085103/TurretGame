@@ -1,0 +1,29 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class MoveCamera : MonoBehaviour {
+
+    public float MouseWheelSpeed = 10.0f;
+    public float MoveSpeed = 0.5f;
+    private Camera m_camera;
+    private Transform m_transform;
+
+	void Start () {
+        m_camera = this.GetComponent<Camera>();
+        m_transform = this.GetComponent<Transform>();
+	}
+	
+
+	void Update () {
+
+        //通过滚轮控制视野缩放
+        //m_camera.fieldOfView -= Input.GetAxis("Mouse ScrollWheel") * MouseWheelSpeed;
+
+        //通过键盘控制摄像机的移动
+        float rx = Input.GetAxis("Horizontal");
+        float tx = Input.GetAxis("Vertical");
+        float hx = Input.GetAxis("Mouse ScrollWheel");
+        m_transform.Translate(new Vector3(-rx * MoveSpeed, hx* MouseWheelSpeed, -tx * MoveSpeed) ,Space.World);
+    }
+}
