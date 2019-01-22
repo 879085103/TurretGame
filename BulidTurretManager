@@ -1,0 +1,244 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
+
+public class BuildTurretManager : MonoBehaviour {
+
+    public TurretData LaserTurretData;
+    public TurretData MissileTurretData;
+    public TurretData StandardTurretData;
+    //被选中的炮台
+    public  TurretData SelectedTurretData;
+    //表示当前选择的炮台（场景中）
+    private TurretData CurretTurret;
+
+    public Transform LaserTurret;
+    public Transform MissileTurret;
+    public Transform StandardTurret;
+
+    public Canvas m_canvas_ToggleTurret;
+    public Text LaserCost;
+    public Text MissileCost;
+    public Text StandardCost;
+    public Text TotalMoney;
+    public GameObject UpgradeUI;
+    public Button UpgradeButton;
+
+    public Animator MoneyAnimator;
+    private Animator UpgradeAnimator;
+
+    public Vector3 mousePos;
+    public int money = 1000;
+
+    private MapCube mapCube;
+
+    void Start()
+    {
+        UpgradeAnimator = UpgradeUI.GetComponent<Animator>();
+
+        LaserCost = m_canvas_ToggleTurret.transform.Find("ToggleSwitch/LaserToggle/Text").GetComponent<Text>();
+        MissileCost = m_canvas_ToggleTurret.transform.Find("ToggleSwitch/MissileToggle/Text").GetComponent<Text>();
+        StandardCost = m_canvas_ToggleTurret.transform.Find("ToggleSwitch/StandardToggle/Text").GetComponent<Text>();
+        TotalMoney = m_canvas_ToggleTurret.transform.Find("TotalMoney").GetComponent<Text>();
+
+        LaserCost.text = string.Format("$ {0}", LaserTurretData.cost);
+        MissileCost.text = string.Format("$ {0}", MissileTurretData.cost);
+        StandardCost.text = string.Format("$ {0}", StandardTurretData.cost);
+        TotalMoney.text = string.Format("$ {0}", money);
+
+        //将鼠标的位置转化到世界坐标系中
+        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    }
+
+    void Update()
+    {
+        
+        //如果鼠标左键按下
+        if(Input.GetMouseButtonDown(0))
+        {
+            //如果没有点在UI上
+            if(EventSystem.current.IsPointerOverGameObject() == false)
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                RaycastHit hit;
+                bool isCollider = Physics.Raycast(ray, out hit, 1000, LayerMask.GetMask("MapCube"));
+                if(isCollider)
+                {
+                    
+                    mapCube = hit.collider.GetComponent<MapCube>();//得到点击的mapCube
+                    if (mapCube.TurretGo == null)
+                    {
+                        //可以创建
+                        //如果金钱足够
+                        if(money > SelectedTurretData.cost)
+                        {
+                            //减少金钱
+                            ChangeMoney(SelectedTurretData.cost);
+                            if(SelectedTurretData.cost != 0)
+                            mapCube.BuildTurret(SelectedTurretData);
+                        }
+                        else
+                        {
+                            //钱不够的话让金钱的text闪烁
+                            MoneyAnimator.SetTrigger("Flick");
+                        }
+                    }
+                    else
+                    {
+                        //未升级
+                        //if(mapCube.IsUpdated == false)
+                        //{
+                        //    ShowgradeUI(mapCube.transform.position,true);
+                        //    mapCube.IsUpdated = true;
+                        //    //升级处理
+                        //    if (mapCube.TurretGo.tag == "MissileTurret")
+                        //    {
+                        //        //TurretUpgraded(MissileTurretData, mapCube);
+                        //        //如果金钱足够升级
+                        //        //if (money > MissileTurretData.costUpgraded)
+                        //        //{
+                        //        //    //销毁原来的炮塔
+                        //        //    Destroy(mapCube.TurretGo.gameObject);
+                        //        //    //减少金钱
+                        //        //    ChangeMoney(MissileTurretData.costUpgraded);
+                        //        //    //创建升级的炮塔
+                        //        //    mapCube.BuildTurret(MissileTurretData.turretUpgradedPrefab);
+                        //        //}
+                        //        //OnUpgradeButtonDown(mapCube, MissileTurretData);
+                        //    }
+                        //    else if (mapCube.TurretGo.tag == "StandardTurret")
+                        //    {
+                        //        //TurretUpgraded(StandardTurretData, mapCube);
+                        //        if (money > StandardTurretData.costUpgraded)
+                        //        {
+                        //            //销毁原来的炮塔
+                        //            Destroy(mapCube.TurretGo.gameObject);
+                        //            //减少金钱
+                        //            ChangeMoney(StandardTurretData.costUpgraded);
+                        //            //创建升级的炮塔
+                        //            mapCube.BuildTurret(StandardTurretData.turretUpgradedPrefab);
+                        //        }
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    ShowgradeUI(mapCube.transform.position, false);
+                        //}
+                                             
+                        if(mapCube.turretData == CurretTurret && UpgradeUI.activeInHierarchy)
+                        {
+
+                            StartCoroutine("HidegradeUI");
+                            
+                        }
+                        else
+                        {
+                            //显示升级面板
+                            ShowgradeUI(mapCube.transform.position, !mapCube.IsUpdated);
+                        }
+                        UpgradeAnimator.SetBool("IsHide", false);
+                        //保存升级面板的炮台
+                        CurretTurret = mapCube.turretData;
+                    }
+                }
+            }
+        }
+    }
+
+    public void OnLaserTurret(bool isOn)
+    {
+        if (isOn)
+        {
+            SelectedTurretData = LaserTurretData;
+        }
+    }
+
+    public void OnMissileTurret(bool isOn)
+    {
+        if (isOn)
+        {
+            SelectedTurretData = MissileTurretData;
+        }
+    }
+
+    public void OnStandardTurret(bool isOn)
+    {
+        if (isOn)
+        {
+            SelectedTurretData = StandardTurretData;
+        }
+    }
+
+    public void ChangeMoney(int costs)
+    {
+        money -= costs;
+        TotalMoney.text = string.Format("$ {0}", money);
+    }
+
+    void ShowgradeUI(Vector3 pos,bool isUpgraded = true)
+    {
+        StopCoroutine("HidegradeUI");
+        UpgradeUI.SetActive(false);
+        UpgradeUI.SetActive(true);
+        UpgradeUI.transform.position = new Vector3(pos.x,1f,pos.z);
+        //禁用或激活upgradedbutton
+        UpgradeButton.GetComponent<Button>().interactable = isUpgraded;
+    }
+
+    IEnumerator HidegradeUI()
+    {
+        UpgradeAnimator.SetTrigger("Hide");
+        //等待0.8s
+        yield return new WaitForSeconds(0.8f);
+        UpgradeUI.SetActive(false);
+    }
+
+    //获取当前要进行操作的炮塔的TurretData
+    //public TurretData Judge(GameObject CurretTurret)
+    //{
+    //    if (CurretTurret.tag == "MissileTurret")
+    //        return MissileTurretData;
+    //    else if (CurretTurret.tag == "StandardTurret")
+    //        return StandardTurretData;
+    //    else
+    //        return LaserTurretData;
+    //}
+
+    //升级操作
+    public void OnUpgradeButtonDown()
+    {
+        if (money >CurretTurret.costUpgraded)
+        {
+            mapCube.IsUpdated = true;
+            //销毁原来的炮塔
+            Destroy(mapCube.TurretGo);
+            //减少金钱
+            ChangeMoney(CurretTurret.costUpgraded);
+            //创建升级的炮塔
+            mapCube.BuildTurret(CurretTurret);
+            //隐藏UI
+            UpgradeUI.SetActive(false);
+            //播放特效
+            GameObject effect = Instantiate(mapCube.BuildEffect, mapCube.transform.position, Quaternion.identity);
+            Destroy(effect, 1.5f);
+        }
+        Debug.Log(1);
+    }
+
+    //拆除操作
+    public void OnDestroyButtonDown()
+    {
+        //销毁炮台
+        Destroy(mapCube.TurretGo);
+        //隐藏UI
+        UpgradeUI.SetActive(false);
+        //返回金钱
+        if (mapCube.IsUpdated == false)
+            ChangeMoney(CurretTurret.cost / 2);
+        else
+            ChangeMoney((-CurretTurret.cost - CurretTurret.costUpgraded) / 2);
+        mapCube.IsUpdated = false;
+    }
+}
