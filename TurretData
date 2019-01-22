@@ -1,0 +1,24 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[System.Serializable]
+public class TurretData {
+    //初始炮台的prefab
+    public GameObject turretPrefab;
+    //升级后炮台的prefab
+    public GameObject turretUpgradedPrefab;
+    //初始炮台的价格
+    public int cost;
+    //升级炮台的价格
+    public int costUpgraded;
+    //炮台的种类
+    public TurretType turretType;
+}
+
+public enum TurretType
+{
+    LaserTurret,
+    MissileTurret,
+    StandardTurret
+}
