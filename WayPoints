@@ -1,0 +1,18 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class waypoints : MonoBehaviour {
+
+    public static Transform[] positions;
+
+    void Awake()
+    {
+        //为position数组分配子物体数目的空间
+        positions = new Transform[transform.childCount];
+        for(int i = 0; i < positions.Length; i++)
+        {
+            positions[i] = transform.GetChild(i);
+        }
+    }
+}
