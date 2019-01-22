@@ -1,0 +1,51 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Rockets : MonoBehaviour {
+
+
+    //子弹的伤害
+    public int damage = 50;
+    private Transform Target;
+    public float speed = 15f;
+    //爆炸特效
+    public GameObject ExplosionEffect;
+    private float distanceArriveTarget = 0.5f;
+
+    void Start () {
+       
+	}
+
+    public void SetTarget(Transform Enemy)
+    {
+        this.Target = Enemy;
+    }
+
+    void Update () {
+        //导弹朝向敌人
+        Debug.Log(Target);
+        //如果目标不存在，则销毁子弹
+        if (Target == null)
+        {
+            Destroy(this.gameObject);
+            return;
+        }
+        transform.LookAt(Target.position);
+        transform.Translate(Vector3.forward * speed * Time.deltaTime,Space.Self);
+
+            Vector3 dir = Target.position - this.transform.position;
+            if (dir.magnitude <= distanceArriveTarget )
+            {
+                Target.GetComponent<Enemy>().TakeDamage(damage);
+                //播放爆炸特效
+                GameObject effect = GameObject.Instantiate(ExplosionEffect, transform.position, transform.rotation);
+                //销毁特效
+                Destroy(effect, 1);
+                //销毁子弹
+                Destroy(this.gameObject);
+            }
+       
+    }
+
+}
