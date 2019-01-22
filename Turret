@@ -1,0 +1,123 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Turret : MonoBehaviour {
+    
+    public List<GameObject> enemys = new List<GameObject>();
+    //炮塔的攻击道具
+    public GameObject TurretWeapon;
+    public Transform m_transform;
+    //导弹发射口的位置
+    public Transform shoot_transform;
+    //旋转速度
+    public float RotateSpeed = 3.0f;
+    //攻击间隔时间
+    public float AttackTime = 0f;
+    //敌人位置
+    private Transform EnemyPos;
+    //判断攻击方式
+    public bool useLaser = false;
+    //激光的伤害
+    public float damageRate = 70;
+
+    public LineRenderer LaserRender;
+    void Update()
+    {
+        Attack();
+       // Debug.Log(enemys[0].transform.position);
+    }
+
+    void Attack()
+    {
+        AttackTime -= Time.deltaTime;
+
+        if (enemys.Count > 0)
+        {
+             //enemys[0]就是炮塔要打的敌人
+            if (enemys[0] != null)
+            {
+                EnemyPos = enemys[0].transform;
+                //break;
+            }
+            else
+            {
+                //炮塔保持原来方向不变
+                EnemyPos = this.transform;
+                enemys.Remove(enemys[0]);
+            }
+
+            //炮台转向敌人
+            m_transform.LookAt(new Vector3(EnemyPos.position.x, m_transform.position.y, EnemyPos.position.z));
+            if(useLaser == false)
+            {
+                if (AttackTime < 0)
+                {
+                    AttackTime = 1.0f;
+                    //如果炮台附近存在敌人且目标位置是敌人的位置生成炮弹
+                    if (enemys.Count > 0 && EnemyPos == enemys[0].transform)
+                    {
+                        GameObject bullet = GameObject.Instantiate(TurretWeapon, shoot_transform.position, m_transform.rotation);
+                        bullet.GetComponent<Rockets>().SetTarget(EnemyPos);
+                    }
+                }
+            }
+            else 
+            {
+                if (LaserRender.enabled == false)
+                    LaserRender.enabled = true;
+                LaserRender.SetPositions(new Vector3[] { shoot_transform.position, EnemyPos.position });
+                if (enemys.Count > 0)
+                    enemys[0].GetComponent<Enemy>().TakeDamage(damageRate * Time.deltaTime);      
+            }
+           
+        }
+        else if(enemys.Count == 0 && useLaser == true)
+        {
+            //没有敌人时，不显示激光
+            LaserRender.enabled = false;
+        }
+    }
+
+    void OnTriggerEnter(Collider col)
+    {
+        //如果检测到敌人进入,就把敌人储存到list数组中
+        if(col.tag.CompareTo("Enemy") == 0)
+        {
+            enemys.Add(col.gameObject);
+        }
+    }
+
+    void OnTriggerExit(Collider col)
+    {
+        //如果检测到敌人离开,就把敌人从list数组中删除
+        if (col.tag.CompareTo("Enemy") == 0)
+        {
+            enemys.Remove(col.gameObject);
+        }
+    }
+    
+    
+
+
+}
+
+//Vector3 shootPosition = m_transform.TransformPoint(shoot_transform.localPosition);
+//Vector3 shootDirection = (new Vector3(EnemyPos.position.x, shootPosition.y, EnemyPos.position.z) - shootPosition).normalized;
+//Ray ray = new Ray(shootPosition, shootDirection);
+//Debug.DrawRay(shootPosition, ray.direction * 10, Color.red);
+//Debug.Log("ShootPos:" + shootPosition + "EnemyPos:" + new Vector3(EnemyPos.position.x, shootPosition.y, EnemyPos.position.z) + "Direction:" + shootDirection + "rayDirection:" + ray.direction + "rayOrigin:" + ray.origin);
+//RaycastHit hitinfo;
+//bool isCollider = Physics.Raycast(ray, out hitinfo, Mathf.Infinity, LayerMask.GetMask("Enemy"));
+//Debug.Log(isCollider);
+
+//if (isCollider)
+//{
+//    //获取射线所射到的物体的Enemy组件
+//    Enemy enemy = hitinfo.collider.gameObject.GetComponent<Enemy>();
+//    if(enemy != null)
+//    {
+//        Debug.Log(2);
+//        Debug.DrawLine(ray.origin, hitinfo.point, Color.red);
+//    }
+//}
