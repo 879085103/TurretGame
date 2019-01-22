@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Enemy : MonoBehaviour {
+
+    private Transform[] positions;
+    private int index = 0;
+    public float speed = 10.0f;
+    public float life = 100;
+    private float TotalHP;
+    public GameObject blood;
+    public GameObject DieEffect;
+
+
+    void Start () {
+        positions = waypoints.positions;
+        TotalHP = life;
+	}
+
+	void Update () {
+        Move();
+	}
+
+    void Move()
+    {
+        if (index > positions.Length - 1) 
+            return;
+        transform.Translate(Vector3.Normalize(positions[index].position - transform.position) * Time.deltaTime * speed);
+        if(Vector3.Distance(positions[index].position,transform.position) < 0.2f)
+        {
+            index++;
+        }
+        //如果index比positions.Length - 1大 说明到终点
+        if (index > positions.Length - 1)
+        {
+            ReachDestination();
+        }
+    }
+
+    //如果达到了终点 就销毁游戏物体
+    void  ReachDestination()
+    {
+        Destroy(this.gameObject);
+        EnemySpawn.CountEnemyAlive--;
+    }
+
+    //控制敌人受到攻击时的生命值
+    public void TakeDamage(float Damage)
+    {
+        life -= Damage;
+        //血条减少
+        blood.GetComponent<Slider>().value -= (float)Damage / TotalHP;
+        if(life <= 0)
+        {
+            Destroy(this.gameObject);
+            EnemySpawn.CountEnemyAlive--;
+            //播放死亡特效
+            GameObject effect = Instantiate(DieEffect, transform.position, Quaternion.identity);
+            Destroy(effect, 1.5f);
+        }
+    }
+}
