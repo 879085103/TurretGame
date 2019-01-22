@@ -1,0 +1,74 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class Beginscene : MonoBehaviour
+{
+
+    public Transform MenuTurret;
+    public float RotateSpeed = 15;
+    private int RotateDir = 1; //1为顺时针,-1为逆时针
+    void Start()
+    {
+
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        RotateSelf();
+        //MenuTurret.Rotate(Vector3.up, - Time.deltaTime * RotateSpeed, Space.World);
+    }
+
+    //当角度在181~360之间时，转化为-1~-180
+    public float CheckAngle(float value)
+    {
+        float angle = value - 180;
+
+        if (angle > 0)
+            return angle - 180;
+
+        return angle + 180;
+    }
+
+    public void RotateSelf()
+    {
+
+        if (CheckAngle(MenuTurret.rotation.eulerAngles.y) > 30 || CheckAngle(MenuTurret.rotation.eulerAngles.y) < -30)
+        {
+            if (RotateDir == 1)
+                RotateDir = -1;
+            else
+                RotateDir = 1;
+
+        }
+        MenuTurret.Rotate(Vector3.up, RotateDir * Time.deltaTime * RotateSpeed, Space.World);
+        Debug.Log(RotateDir);
+        Debug.Log(MenuTurret.rotation.eulerAngles.y);
+    }
+
+    //开始游戏按钮操作
+    public void Begin()
+    {
+        //保存需要加载的目标场景
+        Globe.nextSceneName = "MainScene";
+
+        SceneManager.LoadScene("LoadScene");
+        //SceneManager.LoadScene("MainScene");
+    }
+
+    //退出操作
+
+    public void Exit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+         Application.Quit();
+#endif
+
+    }
+}
+
+
